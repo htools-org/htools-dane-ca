@@ -12,7 +12,8 @@ def get_config():
         (dict, class): A tuple of ``config``, ``backend``.
     """
     config, backend = load_config_and_backend(
-        os.environ.get("CONFIG", "/etc/serles/config.ini")
+        # os.environ.get("CONFIG", "/etc/serles/config.ini")
+        os.environ.get("CONFIG", "./config.ini")
     )
     return config, backend
 

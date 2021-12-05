@@ -22,6 +22,8 @@ class UTCDateTime(db.TypeDecorator):
     """
 
     impl = db.DateTime
+    
+    cache_ok = False
 
     def process_bind_param(self, val, _):
         return val.astimezone(timezone.utc) if val else None
