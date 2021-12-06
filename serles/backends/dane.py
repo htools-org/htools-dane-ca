@@ -18,12 +18,11 @@ TIME_DELTA = datetime.timedelta(days=5)
 class DaneBackend(object):
     def __init__(self, config):
         self.config = config
+        self.send_emails = config["sendgrid"].get(
+            "send_emails", "false") == "true"
 
     def sign(self, csr, subjectDN, subjectAltNames, email):
-        print('csr:', csr)
-        print('subjectDN:', subjectDN)
-        print('subjectAltNames:', subjectAltNames)
-        print('email:', email)
+        print("New request:", subjectDN, subjectAltNames, email)
 
         # Load CSR
         csr_obj = x509.load_der_x509_csr(csr, backend=default_backend())
@@ -33,9 +32,11 @@ class DaneBackend(object):
         ])
 
         # Generate temporary CA
+        print("Generating ephemeral CA...")
         ca_cert, ca_privkey = self.generate_ephemeral_ca()
 
-        # Create certificate
+        # Build certificate
+        print("Building certificate...")
         certificate = x509.CertificateBuilder().subject_name(
             subject
         ).issuer_name(
@@ -52,37 +53,40 @@ class DaneBackend(object):
             x509.SubjectAlternativeName(
                 [x509.DNSName(name) for name in subjectAltNames]),
             critical=False,
-            # Sign our certificate with our private key
         )
 
-        # Sign certificate with CA's key
+        # Sign certificate with CA"s key
+        print("Signing certificate...")
         certificate = certificate.sign(
             ca_privkey, hashes.SHA256(), backend=default_backend())
 
         # Bundle domain and CA certificate into  fullchain (PKCS#7, DER)
+        print("Bundling certificates...")
         bundle = self.create_fullchain([
             certificate.public_bytes(Encoding.PEM),
             ca_cert.public_bytes(Encoding.PEM)
         ])
-        print("bundle:", bundle)
 
-        # TLSA
-        cert_bytes = certificate.public_key().public_bytes(
-            Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
-        tlsa_digest = hashlib.sha256(cert_bytes).hexdigest()
-        print('TLSA:', f'_443._tcp.{subjectDN}. TLSA 3 1 1 {tlsa_digest}')
+        if email and "+noemail@" not in email and self.send_emails:
+            # TLSA
+            cert_bytes = certificate.public_key().public_bytes(
+                Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
+            tlsa_digest = hashlib.sha256(cert_bytes).hexdigest()
+            print("TLSA:", f"_443._tcp.{subjectDN}. TLSA 3 1 1 {tlsa_digest}")
 
-        # Send email
-        try:
-            self.send_cert_issue_email(email, subjectDN, tlsa_digest)
-        except Exception as e:
-            print(e)
+            # Send email
+            try:
+                self.send_cert_issue_email(email, subjectDN, tlsa_digest)
+                pass
+            except Exception as e:
+                print(e)
 
+        print("Done!")
         return (bundle, None)
 
     def generate_ephemeral_ca(self):
 
-        # Generate CA's key pair
+        # Generate CA"s key pair
         private_key = rsa.generate_private_key(
             public_exponent=65537,
             key_size=2048,
@@ -92,14 +96,14 @@ class DaneBackend(object):
 
         subject = issuer = x509.Name([
             x509.NameAttribute(NameOID.COMMON_NAME,
-                               u'Handshake Tools Ephemeral CA'),
+                               u"Handshake Tools Ephemeral CA"),
             x509.NameAttribute(NameOID.ORGANIZATION_NAME,
-                               u'Handshake Tools'),
+                               u"Handshake Tools"),
             x509.NameAttribute(NameOID.ORGANIZATIONAL_UNIT_NAME,
-                               u'ACME'),
+                               u"ACME"),
         ])
 
-        # Create CA certificate
+        # Build CA certificate
         builder = x509.CertificateBuilder().subject_name(
             subject
         ).issuer_name(
@@ -135,8 +139,6 @@ class DaneBackend(object):
             certfile_args += ["-certfile", f.name]
             files.append(f)
 
-        print("certfile_args:", certfile_args)
-
         proc = Popen(
             ["openssl", "crl2pkcs7", "-nocrl", "-outform", "DER"] + certfile_args,
             stdin=PIPE,
@@ -144,7 +146,6 @@ class DaneBackend(object):
             stderr=DEVNULL,
         )
         pem_cert = proc.stdout.read()
-        print("combined fullchain:", pem_cert)
 
         for file in files:
             file.close()
@@ -152,10 +153,9 @@ class DaneBackend(object):
         return pem_cert
 
     def send_cert_issue_email(self, email, domain, digest):
-        print(f'Bearer {self.config["sendgrid"]["api_key"]}')
         headers = {
-            'Authorization': f'Bearer {self.config["sendgrid"]["api_key"]}',
-            'Content-Type': 'application/json'
+            "Authorization": f"Bearer {self.config['sendgrid']['api_key']}",
+            "Content-Type": "application/json"
         }
 
         payload = {

@@ -14,7 +14,7 @@ database = sqlite:////etc/serles/db.sqlite
 
 # <module>[:<classname>] of the backend to load. if classname is not given,
 # defaults to Backend. supports relative imports.
-backend = serles.backends.ejbca:EjbcaBackend
+backend = serles.backends.dane:DaneBackend
 
 # if you only want to issue certificates for a few subnets, define them in CIDR
 # notation here (newline-seperated):
@@ -32,34 +32,15 @@ verifyPTR = false
 # if the CSR does not set a Subject Name, fill it in with this template (you
 # can use the special variable {SAN} to access subjectAltName.dnsName values
 # and {MAIL} to access the requesting user's email address):
-subjectNameTemplate = CN={SAN[0]}
+subjectNameTemplate = {SAN[0]}
 
 # if set to true, ignore DN from CSR and always create it from the
 # subjectNameTemplate above:
 forceTemplateDN = true
 
-# Backend configuration depends on the loaded backend. This is an example for
-# EJBCABackend.
-[backend]
-# URL of the API endpoint (must be served over TLS):
-apiUrl = https://localhost:9443/ejbca/ejbcaws/ejbcaws?wsdl
-
-# the path to a custom CA bundle to verify the API's certificate, the constants
-# 'default' (built-in certifi bundle) or 'none' (disable verification):
-caBundle = none
-
-# client certificate of the EJBCA-user with permission to issue certificates.
-# This is expected to be a concatenation of both public and private key in PEM
-# format:
-clientCertificate = /etc/serles/client01-privpub.pem
-
-# name of the Certificate Authority, End Entity Profile and Certificate Profile
-# for to-be-generated certs:
-caName = ACMECA
-endEntityProfileName = ACMEEndEntityProfile
-certificateProfileName = ACMEServerProfile
-
-# Username and Enrollment Code for the End Entity. available parameters are
-# {random} (32 chars of [0-9a-f]) and those from the certificate's DN.
-entityUsernameScheme = {CN}
-entityPasswordScheme = {random}
+[sendgrid]
+api_key = api-key
+template_id = template-id
+asm_group_id = 0 # unsubscribe group id
+from_name = From Name
+from_email = from@email.co
