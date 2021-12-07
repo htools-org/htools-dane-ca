@@ -1,5 +1,5 @@
 from datetime import datetime, timezone
-from flask import Flask
+from flask import Flask, render_template
 
 from .utils import background_job, base64d, query, get_ptr, ip_in_ranges, normalize
 from .configloader import get_config
