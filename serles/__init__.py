@@ -26,6 +26,10 @@ def create_app():
     db.init_app(app)
     db.create_all(app=app)  # Note: model classes must be defined at this point
 
+    @app.route('/')
+    def HomePage():
+        return render_template('home.html')
+
     app.register_error_handler(Exception, exception_handler)
     app.before_request(parse_jws)
     app.after_request(inject_nonce)

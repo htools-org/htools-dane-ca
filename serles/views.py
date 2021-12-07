@@ -21,13 +21,6 @@ def init_config():
     c_init_config()
 
 
-@api.resource("/")
-class LandingPage(Resource):
-    def get(self):
-        """ return a 200 OK message on / so Users know what this is. """
-        return "Serles ACME Server is running."
-
-
 @api.resource("/directory")
 class Directory(Resource):
     def get(self):
@@ -41,6 +34,9 @@ class Directory(Resource):
             # "newAuthz": MUST be absent if pre-authorization not supported
             # "revokeCert": not offered
             # optional: meta:{termsOfService"",website"",caaIdentities[""],externalAccountRequired?}
+            "meta": {
+                "website": "https://acme.htools.work",
+            }
         }
 
 
