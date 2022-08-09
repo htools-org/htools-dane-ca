@@ -67,6 +67,11 @@ def load_config_and_backend(filename):
         ) from None
 
     try:
+        config["server_name"] = cparser["serles"]["server_name"]
+    except KeyError:
+        raise ConfigError("no [serles]server_name= configured") from None
+
+    try:
         config["database"] = cparser["serles"]["database"]
     except KeyError:
         raise ConfigError("no [serles]database= configured") from None

@@ -1,4 +1,7 @@
 [serles]
+# Hostname for Flask url generation (without scheme, with port)
+server_name = localhost
+
 # Database to use, given as a URI understood by SQLAlchemy.
 # Note: The database stores the Account id-to-key mapping. Some clients (e.g.
 # certbot) will after registering assume their public key is known to Serles
