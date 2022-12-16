@@ -3,7 +3,7 @@ services:
   app:
     build: .
     ports:
-      - "5000:5000"
+      - "8443:8443"
     environment:
       - CONFIG=./config.ini
     volumes:
