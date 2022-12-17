@@ -8,4 +8,5 @@ WORKDIR /app
 
 EXPOSE 8443
 
-CMD ["python", "-m", "serles"]
+# CMD ["python", "-m", "serles"]
+CMD ["gunicorn", "-c", "gunicorn.conf.py", "serles:create_app()"]
