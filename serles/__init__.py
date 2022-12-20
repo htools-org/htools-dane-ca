@@ -22,6 +22,7 @@ def create_app():
     app.config["SQLALCHEMY_DATABASE_URI"] = config["database"]
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SERVER_NAME"] = config["server_name"]
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
 
     init_config()  # views.init_config()
     api.init_app(app)
