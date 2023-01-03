@@ -11,6 +11,7 @@ def get_config():
     Returns:
         (dict, class): A tuple of ``config``, ``backend``.
     """
+    print("path ", os.environ.get("CONFIG", "/etc/serles/config.ini"))
     config, backend = load_config_and_backend(
         os.environ.get("CONFIG", "/etc/serles/config.ini")
     )
@@ -82,7 +83,8 @@ def load_config_and_backend(filename):
             ipaddress.ip_network(cidr) for cidr in ranges if cidr
         ]
     except KeyError:
-        config["allowedServerIpRanges"] = None  # if not defined, allow from everywhere.
+        # if not defined, allow from everywhere.
+        config["allowedServerIpRanges"] = None
 
     try:
         ranges = cparser["serles"]["excludeServerIpRanges"].splitlines()
@@ -107,8 +109,10 @@ def load_config_and_backend(filename):
         ) from None
 
     try:
-        config["verifyPTR"] = cparser["serles"].getboolean("verifyPTR", fallback=False)
+        config["verifyPTR"] = cparser["serles"].getboolean(
+            "verifyPTR", fallback=False)
     except ValueError:
-        raise ConfigError("[serles]verifyPTR= must be 'true' or 'false'") from None
+        raise ConfigError(
+            "[serles]verifyPTR= must be 'true' or 'false'") from None
 
     return config, backend

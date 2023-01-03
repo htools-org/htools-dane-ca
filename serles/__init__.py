@@ -15,17 +15,21 @@ def create_app():
     This function should be passed to the WSGI server.
     """
     config, _ = get_config()
-
+    # print(config)
     app = Flask(__name__)
-    app.config["PROPAGATE_EXCEPTIONS"] = True  # makes @app.errorhandler handle events
+    # makes @app.errorhandler handle events
+    app.config["PROPAGATE_EXCEPTIONS"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = config["database"]
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SERVER_NAME"] = config["server_name"]
+    app.config['PREFERRED_URL_SCHEME'] = 'https'
 
     init_config()  # views.init_config()
     api.init_app(app)
     db.init_app(app)
-    db.create_all(app=app)  # Note: model classes must be defined at this point
+    # db.create_all(app=app)  # Note: model classes must be defined at this point
+    with app.app_context():
+        db.create_all()
 
     @app.route('/')
     def HomePage():
@@ -36,7 +40,8 @@ def create_app():
     app.after_request(inject_nonce)
     app.after_request(index_header)
 
-    @background_job(60)  # purge unused nonces every minute (keeps database small)
+    # purge unused nonces every minute (keeps database small)
+    @background_job(60)
     def purge_nonces():
         with app.app_context():
             Nonces.purge_expired()

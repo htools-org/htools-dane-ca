@@ -27,10 +27,11 @@ class Directory(Resource):
         """
         Displays the URLs for accessing certain functions, and some metadata.
         """
+
         return {
-            "newNonce": api.url_for(NewNonce, _external=True),
-            "newAccount": api.url_for(NewAccount, _external=True),
-            "newOrder": api.url_for(NewOrder, _external=True),
+            "newNonce": api.url_for(NewNonce, _external=True, _scheme='https'),
+            "newAccount": api.url_for(NewAccount, _external=True, _scheme='https'),
+            "newOrder": api.url_for(NewOrder, _external=True, _scheme='https'),
             # "newAuthz": MUST be absent if pre-authorization not supported
             # "revokeCert": not offered
             # optional: meta:{termsOfService"",website"",caaIdentities[""],externalAccountRequired?}
@@ -61,7 +62,8 @@ class NewAccount(Resource):
         contact = g.payload.get("contact", [])
         contact = contact[0] if len(contact) > 0 else None  # only 1 email!
         if contact and not contact.startswith("mailto:"):
-            raise ACMEError("only (one) email supported", 400, "unsupportedContact")
+            raise ACMEError("only (one) email supported",
+                            400, "unsupportedContact")
         if contact:
             contact = contact.replace("mailto:", "")
         termsOfServiceAgreed = g.payload.get("termsOfServiceAgreed", False)
@@ -84,7 +86,8 @@ class NewAccount(Resource):
         else:  # At this point, the user has no account, but wants one
             account = Account(jwk=jwk_pem, contact=contact)
             db.session.add(account)
-            db.session.commit()  # note: accessing `account` after the commit requires setting expire_on_commit=False
+            # note: accessing `account` after the commit requires setting expire_on_commit=False
+            db.session.commit()
             preexisting = False
 
         return (
@@ -101,7 +104,8 @@ class NewOrder(Resource):
         Submit a new Order. The request will include a list of Identifers
         (domain names) the client wants on the certificate.
         """
-        notBefore = g.payload.get("notBefore")  # optional, we ignore it for now
+        notBefore = g.payload.get(
+            "notBefore")  # optional, we ignore it for now
         notAfter = g.payload.get("notAfter")  # optional, we ignore it for now
         identifiers = g.payload.get("identifiers")
         if not identifiers:
@@ -144,11 +148,13 @@ class NewOrder(Resource):
         )
 
         db.session.add(order)
-        db.session.commit()  # note: accessing `order` after the commit requires setting expire_on_commit=False
+        # note: accessing `order` after the commit requires setting expire_on_commit=False
+        db.session.commit()
         return (
             order.serialized,
             201,
-            {"Location": api.url_for(OrderMain, orderid=order.id, _external=True)},
+            {"Location": api.url_for(
+                OrderMain, orderid=order.id, _external=True)},
         )
 
 
@@ -158,7 +164,8 @@ class NewAuthz(Resource):
     pass
 
 
-@api.resource("/revokeCert")  # RFC8555 §7.6 (Certificate Revocation, not offered)
+# RFC8555 §7.6 (Certificate Revocation, not offered)
+@api.resource("/revokeCert")
 class RevokeCert(Resource):
     "not offered."
     pass
@@ -177,7 +184,8 @@ class AccountMain(Resource):
             JSON-serialized Account object (post-update).
         """
         if kid != g.kid:
-            raise ACMEError(f"{kid}, {g.kid}Unexpected Account ID", 403, "unauthorized")
+            raise ACMEError(
+                f"{kid}, {g.kid}Unexpected Account ID", 403, "unauthorized")
         account = Account.query.filter_by(id=kid).first()
         if not account:
             raise ACMEError("", 400, "accountDoesNotExist")
@@ -188,11 +196,13 @@ class AccountMain(Resource):
         if contact is not None:
             contact = contact[0] if len(contact) > 0 else None  # only 1 email!
             if contact and not contact.startswith("mailto:"):
-                raise ACMEError("only (one) email supported", 400, "unsupportedContact")
+                raise ACMEError("only (one) email supported",
+                                400, "unsupportedContact")
             if contact:
                 contact = contact.replace("mailto:", "")
             account.contact = contact
-            db.session.commit()  # note: accessing `account` after the commit requires setting expire_on_commit=False
+            # note: accessing `account` after the commit requires setting expire_on_commit=False
+            db.session.commit()
 
         return account.serialized
 
@@ -324,5 +334,6 @@ class CertificateMain(Resource):
         pem_cert = pkcs7_to_pem_chain(cert)
 
         return make_response(
-            pem_cert, 200, {"Content-Type": "application/pem-certificate-chain"}
+            pem_cert, 200, {
+                "Content-Type": "application/pem-certificate-chain"}
         )
