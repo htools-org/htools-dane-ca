@@ -86,6 +86,9 @@ def http_challenge(challenge):  # RFC8555 §8.3
         tuple(str,str): problem detail type of the error and  textual
             description, or (None,None).
     """
+    if config["skip_challenge"]:
+        return None, None
+    
     host = challenge.authorization.identifier.value
     token = challenge.token
     prefix = ".well-known/acme-challenge"

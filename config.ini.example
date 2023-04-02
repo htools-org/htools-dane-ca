@@ -41,6 +41,9 @@ subjectNameTemplate = {SAN[0]}
 # subjectNameTemplate above:
 forceTemplateDN = true
 
+# if set, HTTP challenge isn't verified for ownership
+skip_challenge = false
+
 [sendgrid]
 api_key = api-key
 template_id = template-id

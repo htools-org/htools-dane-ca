@@ -110,5 +110,10 @@ def load_config_and_backend(filename):
         config["verifyPTR"] = cparser["serles"].getboolean("verifyPTR", fallback=False)
     except ValueError:
         raise ConfigError("[serles]verifyPTR= must be 'true' or 'false'") from None
+    
+    try:
+        config["skip_challenge"] = cparser["serles"].getboolean("skip_challenge", fallback=False)
+    except ValueError:
+        raise ConfigError("[serles]skip_challenge= must be 'true' or 'false'") from None
 
     return config, backend

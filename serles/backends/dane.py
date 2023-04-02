@@ -3,6 +3,8 @@ import uuid
 import tempfile
 import hashlib
 import requests
+import subprocess
+import json
 from subprocess import Popen, PIPE, DEVNULL
 
 from cryptography import x509
@@ -13,6 +15,13 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 TIME_DELTA = datetime.timedelta(days=5)
+
+
+# https://freeoid.pythonanywhere.com/
+EXTENSION_ID_BY_NAME = {
+    "UrkelProof": "1.3.6.1.4.1.54392.5.1620",
+    "DnssecChain": "1.3.6.1.4.1.54392.5.1621",
+}
 
 
 class DaneBackend(object):
@@ -55,6 +64,12 @@ class DaneBackend(object):
             critical=False,
         )
 
+        # Experimental HIP-0017 Certificate (Stateless DANE)
+        if email and "+hip17" in email:
+            hip17_exts = self.get_hip17_extensions(subjectDN)
+            for ext in hip17_exts:
+                certificate = certificate.add_extension(ext, False)
+
         # Sign certificate with CA"s key
         print("Signing certificate...")
         certificate = certificate.sign(
@@ -67,7 +82,7 @@ class DaneBackend(object):
             ca_cert.public_bytes(Encoding.PEM)
         ])
 
-        if email and "+noemail@" not in email and self.send_emails:
+        if email and "+noemail" not in email and self.send_emails:
             # TLSA
             cert_bytes = certificate.public_key().public_bytes(
                 Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
@@ -181,3 +196,29 @@ class DaneBackend(object):
         if r.status_code not in [200, 202]:
             print(r.status_code)
             print(r.text)
+
+    def get_hip17_extensions(self, name: str):
+        proc = subprocess.run(
+            ["stateless-dane", "get-ext-data", name], capture_output=True, text=True)
+
+        if proc.stderr:
+            print(proc.stderr)
+            raise Exception(
+                'Error when building HIP-17 certificate. Check log for more details.')
+
+        data = json.loads(proc.stdout)
+        # print(data)
+
+        extensions = []
+
+        for el in data:
+            ext_id_value = EXTENSION_ID_BY_NAME.get(el["extnID"])
+            extensions.append(
+                x509.UnrecognizedExtension(
+                    oid=x509.ObjectIdentifier(ext_id_value),
+                    value=bytes.fromhex(el["extnValue"])
+                )
+            )
+
+        # print(extensions)
+        return extensions
