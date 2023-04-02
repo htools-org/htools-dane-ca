@@ -14,7 +14,7 @@ from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
-TIME_DELTA = datetime.timedelta(days=5)
+TIME_DELTA = datetime.timedelta(days=365)
 
 
 # https://freeoid.pythonanywhere.com/
