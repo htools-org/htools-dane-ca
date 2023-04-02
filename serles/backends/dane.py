@@ -199,7 +199,7 @@ class DaneBackend(object):
 
     def get_hip17_extensions(self, name: str):
         proc = subprocess.run(
-            ["stateless-dane", "get-ext-data", name], capture_output=True, text=True)
+            ["stateless-dane", "get-ext-data", name, "--parsed", "false"], capture_output=True, text=True)
 
         if proc.stderr:
             print(proc.stderr)
