@@ -9,6 +9,6 @@ sudo certbot certonly \
 	--no-eff-email \
 	--reuse-key \
 	-vv \
-	-m 'me@localhost' \
-	-d localhost \
+	-m 'me+noemail@localhost' \
+	-d letsdane \
 	--no-verify-ssl # XXX: very bad, no good idea!

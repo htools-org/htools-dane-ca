@@ -15,6 +15,7 @@ from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
 
 TIME_DELTA = datetime.timedelta(days=365)
+TIME_DELTA_HIP17 = datetime.timedelta(days=2)
 
 
 # https://freeoid.pythonanywhere.com/
@@ -54,10 +55,6 @@ class DaneBackend(object):
             csr_obj.public_key()
         ).serial_number(
             x509.random_serial_number()
-        ).not_valid_before(
-            datetime.datetime.utcnow() - TIME_DELTA
-        ).not_valid_after(
-            datetime.datetime.utcnow() + TIME_DELTA
         ).add_extension(
             x509.SubjectAlternativeName(
                 [x509.DNSName(name) for name in subjectAltNames]),
@@ -65,10 +62,39 @@ class DaneBackend(object):
         )
 
         # Experimental HIP-0017 Certificate (Stateless DANE)
-        if email and "+hip17" in email:
-            hip17_exts = self.get_hip17_extensions(subjectDN)
-            for ext in hip17_exts:
-                certificate = certificate.add_extension(ext, False)
+        if email and "+nohip17" not in email:
+            try:
+                print("Attempting to fetch HIP-17 extensions...")
+                hip17_exts = self.get_hip17_extensions(subjectDN)
+                for ext in hip17_exts:
+                    certificate = certificate.add_extension(ext, False)
+                # shorter certificates
+                certificate = certificate.not_valid_before(
+                    datetime.datetime.utcnow() - TIME_DELTA_HIP17
+                ).not_valid_after(
+                    datetime.datetime.utcnow() + TIME_DELTA_HIP17
+                )
+                print("Successfully added HIP-17 extensions!")
+            except Exception as e:
+                print("Error fetching HIP-17 extensions:")
+                print(e)
+                # Only error if HIP-17 was explicitly requested
+                # Otherwise ignore silently and continue with non-HIP-17 cert
+                if "+hip17" in email:
+                    raise e
+                else:
+                    print("Silently ignoring HIP-17 error.")
+        else:
+            if email:
+                print("Skipping HIP-17, was explicitly requested.")
+
+        # Set dates if not HIP-17
+        if certificate._not_valid_before is None:
+            certificate = certificate.not_valid_before(
+                    datetime.datetime.utcnow() - TIME_DELTA
+                ).not_valid_after(
+                    datetime.datetime.utcnow() + TIME_DELTA
+                )
 
         # Sign certificate with CA"s key
         print("Signing certificate...")
