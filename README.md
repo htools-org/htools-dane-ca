@@ -10,8 +10,17 @@ This is a fork of [dvtirol/serles-acme](https://github.com/dvtirol/serles-acme),
 - Generate certificates for Handshake domains
 - New CA keys are generated (and destroyed) while signing every certificate
 
-Enter a valid email address to receive the final step (adding a DNS record)
-Request to not send emails (suffix your address `+noemail` like: `foobar+noemail@gmail.com`)
+### Customization options
+
+Requests are flexible and options are passed by appending keywords to the email address:
+
+- `+email` - opt into receiving emails with TLSA records after every cert issue.
+- `+nohip17` - opt out of HIP-17 (Stateless DANE) extensions
+- `+longttl` - request for long-lived certificates (1 year) - only applies if no HIP-17
+
+Options can be combined. Example:
+
+- `myvalidaddress+email+longttl+nohip17@gmail.com` - get emails and long-lived certs without HIP-17 extensions
 
 ## Usage
 

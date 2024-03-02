@@ -1,4 +1,5 @@
 import datetime
+from datetime import timedelta
 import uuid
 import tempfile
 import hashlib
@@ -13,9 +14,6 @@ from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives.serialization import Encoding, PublicFormat
-
-TIME_DELTA = datetime.timedelta(days=365)
-TIME_DELTA_HIP17 = datetime.timedelta(days=2)
 
 
 # https://freeoid.pythonanywhere.com/
@@ -70,9 +68,9 @@ class DaneBackend(object):
                     certificate = certificate.add_extension(ext, False)
                 # shorter certificates
                 certificate = certificate.not_valid_before(
-                    datetime.datetime.utcnow() - TIME_DELTA_HIP17
+                    datetime.datetime.utcnow() - timedelta(days=1)
                 ).not_valid_after(
-                    datetime.datetime.utcnow() + TIME_DELTA_HIP17
+                    datetime.datetime.utcnow() + timedelta(days=2)
                 )
                 print("Successfully added HIP-17 extensions!")
             except Exception as e:
@@ -90,11 +88,18 @@ class DaneBackend(object):
 
         # Set dates if not HIP-17
         if certificate._not_valid_before is None:
-            certificate = certificate.not_valid_before(
-                    datetime.datetime.utcnow() - TIME_DELTA
-                ).not_valid_after(
-                    datetime.datetime.utcnow() + TIME_DELTA
-                )
+            if email and '+longttl' in email:
+                certificate = certificate.not_valid_before(
+                        datetime.datetime.utcnow() - timedelta(days=1)
+                    ).not_valid_after(
+                        datetime.datetime.utcnow() + timedelta(days=365)
+                    )
+            else:
+                certificate = certificate.not_valid_before(
+                        datetime.datetime.utcnow() - timedelta(days=1)
+                    ).not_valid_after(
+                        datetime.datetime.utcnow() + timedelta(days=2)
+                    )
 
         # Sign certificate with CA"s key
         print("Signing certificate...")
@@ -150,9 +155,9 @@ class DaneBackend(object):
         ).issuer_name(
             issuer
         ).not_valid_before(
-            datetime.datetime.utcnow() - TIME_DELTA
+            datetime.datetime.utcnow() - timedelta(days=1)
         ).not_valid_after(
-            datetime.datetime.utcnow() + TIME_DELTA
+            datetime.datetime.utcnow() + timedelta(days=365)
         ).serial_number(
             int(uuid.uuid4())
         ).public_key(
