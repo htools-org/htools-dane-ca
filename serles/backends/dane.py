@@ -108,7 +108,7 @@ class DaneBackend(object):
             ca_cert.public_bytes(Encoding.PEM)
         ])
 
-        if email and "+noemail" not in email and self.send_emails:
+        if email and "+email" in email and self.send_emails:
             # TLSA
             cert_bytes = certificate.public_key().public_bytes(
                 Encoding.DER, PublicFormat.SubjectPublicKeyInfo)
