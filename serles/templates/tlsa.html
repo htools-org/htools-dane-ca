@@ -67,7 +67,7 @@
 
           <div id="result-div" class="mt-8 p-4 bg-gray-700 rounded-lg">
             <p>TLSA Record to add:</p>
-            <pre class="mt-2 font-mono select-all">Enter domain above.</pre>
+            <pre class="mt-2 font-mono">Enter domain above.</pre>
           </div>
 
           <script>
@@ -94,7 +94,9 @@
                 const tlsa = res.tlsa;
                 // console.log({ tlsa });
 
-                $resultDiv.querySelector('pre').innerText = tlsa;
+                $resultDiv.querySelector(
+                  'pre'
+                ).innerText = `Name: _443._tcp.${domain}\nType: TLSA\nValue: ${tlsa}`;
               } catch (error) {
                 // console.log({ error });
                 if (error.name === 'AbortError') error = 'Timeout.';
