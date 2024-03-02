@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
-from flask import Flask, render_template
+from flask import Flask, render_template, jsonify
+import re
 
 from .utils import background_job, base64d, query, get_ptr, ip_in_ranges, normalize
 from .configloader import get_config
@@ -30,6 +31,26 @@ def create_app():
     @app.route('/')
     def HomePage():
         return render_template('home.html')
+
+    @app.route('/tlsa')
+    def TLSAPage():
+        return render_template('tlsa.html')
+
+    @app.route('/tlsa/<domain>')
+    def TLSADomain(domain):
+        if not re.match(r'^[a-zA-Z0-9_\-.]+$', domain):
+            res = jsonify({'error': 'Invalid domain.'})
+            res.status_code = 400
+            return res
+        try:
+            tlsa = utils.get_tlsa_remote_host(domain)
+        except Exception as e:
+            print(e)
+            res = jsonify({'error': 'Could not connect / fetch TLSA.'})
+            res.status_code = 500
+            return res
+
+        return {'tlsa': tlsa}
 
     app.register_error_handler(Exception, exception_handler)
     app.before_request(parse_jws)

@@ -1,4 +1,5 @@
 import base64
+import subprocess
 import ipaddress
 import dns.resolver  # fedora package: python3-dns.noarch
 import dns.reversename
@@ -99,3 +100,15 @@ def normalize(domain):
         str: normalized domain name.
     """
     return domain.rstrip(".").lower() if domain else None
+
+
+def get_tlsa_remote_host(domain):
+    ip = str(query(domain, 'A')[0])
+    p_sclient = subprocess.run(('openssl', 's_client', '-connect', ip+':443', '-servername', domain), input='Q'.encode('ascii'), check=True, capture_output=True, timeout=10)
+    p_x509 = subprocess.run(('openssl', 'x509', '-pubkey', '-noout', '-in', '/dev/stdin'), input=p_sclient.stdout, capture_output=True, timeout=5)
+    p_pkey = subprocess.run(('openssl', 'pkey', '-pubin', '-outform', 'der'), input=p_x509.stdout, capture_output=True, timeout=5)
+    p_dgst = subprocess.run(('openssl', 'dgst', '-sha256', '-binary'), input=p_pkey.stdout, capture_output=True, timeout=5)
+    p_xxd = subprocess.run(('xxd', '-p', '-u', '-c', '32'), input=p_dgst.stdout, capture_output=True, timeout=5)
+
+    output = p_xxd.stdout.decode('utf-8').strip()
+    return '3 1 1 ' + output

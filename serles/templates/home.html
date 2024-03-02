@@ -21,7 +21,7 @@
         <header class="px-6 pt-6 flex justify-between items-center">
           <a href="https://htools.work" class="hover:underline">HTools</a>
           <h1 class="mx-8 text-lg font-medium text-center">
-            HTools Certificate Authority<br />
+            <a href="/">HTools Certificate Authority</a><br />
             <p class="mt-2 text-sm font-light">just kidding, kinda.</p>
           </h1>
           <a
@@ -101,8 +101,14 @@
             &nbsp;&nbsp;&nbsp;&nbsp;--server https://acme.htools.work/directory
             --reuse-key
             <br /><br />
-            # Use a valid email above to receive the final step email (adding a
-            DNS record)
+            # Finally, set the TLSA record from
+            <a
+              class="underline"
+              href="/tlsa"
+              target="_blank"
+              rel="noopener noreferrer"
+              >https://acme.htools.work/tlsa</a
+            >
           </div>
 
           <div class="mt-8 px-4 grid md:grid-cols-2 gap-x-20 gap-y-8 text-left">
@@ -175,15 +181,7 @@
       >
         <p class="text-sm font-medium text-white">
           Made with ♥️ by
-          <a href="https://blek.ga" class="hover:underline">Rithvik Vibhu</a> |
-          Proudly supported by
-          <a
-            href="https://github.com/HandyOSS/HandyGrants"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="hover:underline"
-            >HandyOSS</a
-          >
+          <a href="https://blek.ga" class="hover:underline">Rithvik Vibhu</a>
         </p>
       </footer>
     </div>
